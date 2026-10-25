@@ -1,0 +1,13 @@
+cd "C:\Users\Vishal\OneDrive\Documents\Default Project\Upgrade"
+
+# 1. Simulator (any hazard or cycle all)
+py -3 program_1_simulator.py --fresh --hazard battery_depletion
+
+# 2. Brain
+py -3 program_2_cee_brain.py --fresh --hazard dust_blinding
+
+# 3. Dashboard (open browser with 13-channel gauges)
+py -3 program_3_dashboard.py --fresh --open
+
+# 4. Game (WASD/Arrows, drive through zones)
+py -3 program_4_game_sim.py
