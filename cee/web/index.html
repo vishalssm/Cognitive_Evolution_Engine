@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cognitive Evolution Engine — Operations Console</title>
+<link rel="stylesheet" href="/static/styles.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%2338bdf8' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23a78bfa'/%3E%3C/svg%3E" />
+</head>
+<body>
+<div class="shell">
+
+  <!-- ================= TOP BAR ================= -->
+  <div class="topbar">
+    <div class="brand">
+      <h1>Cognitive Evolution Engine</h1>
+      <span class="sub">Autonomous rule induction &middot; rule recall</span>
+    </div>
+
+    <div class="spacer"></div>
+
+    <span class="pill" id="pill-status"><i class="dot" id="status-dot"></i><span id="status-text">Connecting</span></span>
+    <span class="pill" id="pill-link">Link <b id="link-text">—</b></span>
+    <span class="pill">Session <b id="session-text">—</b></span>
+    <span class="pill">Frame <b id="frame-text">0</b></span>
+
+    <div class="controls">
+      <button id="btn-pause" class="ghost">Pause</button>
+      <div class="seg" id="speed-seg">
+        <button data-speed="0.5">0.5×</button>
+        <button data-speed="1" class="on">1×</button>
+        <button data-speed="2">2×</button>
+        <button data-speed="4">4×</button>
+      </div>
+      <button id="btn-auto" class="ghost">Auto hazards</button>
+      <button id="btn-repeat" class="ghost">Repeat last</button>
+      <button id="btn-reset" class="ghost danger">Reset memory</button>
+    </div>
+  </div>
+
+  <!-- ================= KPI STRIP ================= -->
+  <div class="kpis" id="kpis">
+    <div class="kpi accent-cyan"><div class="k">Rules learned</div><div class="v" id="k-rules">0</div><div class="d" id="k-rules-d">Working 1 · induction</div></div>
+    <div class="kpi accent-green"><div class="k">Rules executed</div><div class="v" id="k-recalls">0</div><div class="d" id="k-recalls-d">Working 2 · recall</div></div>
+    <div class="kpi accent-violet"><div class="k">Mean confidence</div><div class="v" id="k-conf">0.00</div><div class="d" id="k-conf-d">Across knowledge graph</div></div>
+    <div class="kpi accent-amber"><div class="k">Recall rate</div><div class="v" id="k-rate">0%</div><div class="d" id="k-rate-d">Anomalies solved from memory</div></div>
+    <div class="kpi accent-green"><div class="k">Verified helpful</div><div class="v" id="k-ok">0</div><div class="d" id="k-ok-d">Actions that worked</div></div>
+    <div class="kpi accent-red"><div class="k">Contested rules</div><div class="v" id="k-bad">0</div><div class="d" id="k-bad-d">Actions demoted</div></div>
+  </div>
+
+  <!-- ================= COGNITIVE LOOP + LIVE TELEMETRY ================= -->
+  <div class="grid g-2">
+
+    <section class="panel">
+      <header>
+        <span class="title">Cognitive loop</span>
+        <span class="tag" id="loop-tag">idle</span>
+        <span class="hint">Every telemetry frame walks this pipeline</span>
+      </header>
+      <div class="body">
+        <div class="pipeline" id="pipeline"></div>
+
+        <div class="narration" id="narration">Connecting to the engine…</div>
+
+        <div class="rows" style="margin-top:14px" id="anomaly-rows"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header>
+        <span class="title">Live telemetry</span>
+        <span class="tag cyan" id="telemetry-tag">5 channels</span>
+        <span class="hint">Distance from healthy band</span>
+      </header>
+      <div class="body">
+        <div class="gauges" id="gauges"></div>
+        <div style="margin-top:16px">
+          <div class="rl" style="font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);margin-bottom:7px">Active interventions</div>
+          <div id="interventions"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ================= TIMELINE ================= -->
+  <section class="panel" style="margin-top:16px">
+    <header>
+      <span class="title">Telemetry timeline</span>
+      <span class="hint" id="timeline-hint">Hover a strip to read values</span>
+    </header>
+    <div class="body">
+      <div class="chart">
+        <canvas id="chart" height="360"></canvas>
+        <div class="readout" id="chart-readout">—</div>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--cyan)"></i>RPM</span>
+        <span><i style="background:var(--violet)"></i>Accel X</span>
+        <span><i style="background:var(--green)"></i>Radar</span>
+        <span><i style="background:var(--amber)"></i>CPU temp</span>
+        <span><i style="background:var(--red-dim)"></i>Anomaly frame</span>
+        <span><i style="background:var(--edge-hi)"></i>Rule dispatched</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= WORKING 1 / WORKING 2 ================= -->
+  <div class="grid g-2e">
+
+    <section class="panel" id="panel-w1">
+      <header>
+        <span class="title" style="color:var(--amber)">Working 1 — Induction</span>
+        <span class="tag amber" id="w1-tag">no event yet</span>
+      </header>
+      <div class="body" id="w1-body">
+        <div class="empty">Waiting for the first anomaly</div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-w2">
+      <header>
+        <span class="title" style="color:var(--green)">Working 2 — Recall</span>
+        <span class="tag green" id="w2-tag">no event yet</span>
+      </header>
+      <div class="body" id="w2-body">
+        <div class="empty">Waiting for the first anomaly</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ================= VERIFICATION ================= -->
+  <section class="panel" style="margin-top:16px">
+    <header>
+      <span class="title">Verification &amp; reinforcement</span>
+      <span class="hint">Each action is judged against its own forward model</span>
+    </header>
+    <div class="body" id="verify-body">
+      <div class="empty">No rule has been verified yet</div>
+    </div>
+  </section>
+
+  <!-- ================= KNOWLEDGE GRAPH ================= -->
+  <div class="grid g-2e">
+    <section class="panel">
+      <header>
+        <span class="title">Operational knowledge graph</span>
+        <span class="tag violet" id="kb-tag">0 rules</span>
+        <span class="hint">Click a row to expand &middot; click a header to sort</span>
+      </header>
+      <div class="body flush">
+        <div class="kb-wrap">
+          <table class="kb" id="kb">
+            <thead>
+              <tr>
+                <th data-sort="id">Rule<span class="arw"></span></th>
+                <th data-sort="title">Predicate → action<span class="arw"></span></th>
+                <th data-sort="confidence">Confidence<span class="arw"></span></th>
+                <th data-sort="times_applied" class="num">Applied<span class="arw"></span></th>
+                <th data-sort="success" class="num">Success<span class="arw"></span></th>
+              </tr>
+            </thead>
+            <tbody id="kb-body">
+              <tr><td colspan="5" class="empty" style="padding:26px">Knowledge graph is empty — induce a hazard to grow it</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header>
+        <span class="title">Event stream</span>
+        <span class="hint" id="events-hint">0 events</span>
+      </header>
+      <div class="body tight">
+        <div class="events" id="events">
+          <div class="empty">No cognitive events recorded</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ================= HAZARD INJECTION ================= -->
+  <section class="panel" style="margin-top:16px">
+    <header>
+      <span class="title">Fault injection</span>
+      <span class="hint">Inject the same fault twice to watch induction, then recall</span>
+    </header>
+    <div class="body">
+      <div class="haz-grid" id="hazards"></div>
+    </div>
+  </section>
+
+  <!-- ================= EXPLANATION ================= -->
+  <div class="grid" style="margin-top:22px">
+    <div class="explain">
+      <div class="xcard w1">
+        <h3>Working 1 — Induction</h3>
+        <p class="lead">Something went wrong that the engine has never seen before, so it writes down what it learned instead of guessing twice.</p>
+        <ol>
+          <li><b>Detect.</b> A channel leaves its healthy band. The engine ranks the deviating channels and computes a total residual.</li>
+          <li><b>Generalise.</b> For each deviating channel it writes one comparison whose threshold sits between the healthy band and the observation — e.g. <code>rpm &gt; 123</code>. The rule covers a <i>region</i> of telemetry, not one reading, and a nominal frame can never satisfy it.</li>
+          <li><b>Choose a remedy.</b> Every primitive action is forward-simulated. The one predicted to leave the smallest residual wins, and the projected number is stored as that rule's promise.</li>
+          <li><b>Commit.</b> Predicate + action become a new rule in the knowledge graph with its own confidence counter, and the action is dispatched immediately.</li>
+        </ol>
+      </div>
+
+      <div class="xcard w2">
+        <h3>Working 2 — Recall</h3>
+        <p class="lead">The same fault happens again, so the engine reuses what it already knows and then checks whether that knowledge was any good.</p>
+        <ol>
+          <li><b>Match.</b> Every stored predicate is evaluated against the current telemetry. Rules that fit are ranked by confidence × specificity.</li>
+          <li><b>Apply.</b> If the best match clears the confidence floor it is trusted: its action is dispatched to the actuators, which measurably change the telemetry.</li>
+          <li><b>Verify.</b> Two frames later the same channels are re-measured and compared against the rule's own projection — not an arbitrary threshold.</li>
+          <li><b>Reinforce.</b> Reality matched the prediction, so confidence rises; it did not, so the rule is demoted and, once demoted far enough, stops being trusted.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="principles">
+      <div class="pr">
+        <h5>Symbols evolve, primitives don't</h5>
+        <p>Rules are invented and revised at runtime. The vocabulary of motor and compute actions is fixed and interpretable.</p>
+      </div>
+      <div class="pr">
+        <h5>Judged, not assumed</h5>
+        <p>Every action is scored by forward simulation and then held to that same prediction afterwards. Bad models lose confidence.</p>
+      </div>
+      <div class="pr">
+        <h5>Never learn from your own fix</h5>
+        <p>Induction is blocked while an intervention is in force, so rules describe the rover instead of the engine's mitigation.</p>
+      </div>
+      <div class="pr">
+        <h5>Memory survives restart</h5>
+        <p>The knowledge graph is persisted to disk, so accumulated experience keeps reinforcing across sessions.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span id="foot-session">—</span>
+    <span id="foot-transport">—</span>
+    <span id="foot-memory">—</span>
+    <span><span class="kbd">Space</span> pause &nbsp; <span class="kbd">I</span> inject last &nbsp; <span class="kbd">R</span> repeat last &nbsp; <span class="kbd">N</span> new hazard</span>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
